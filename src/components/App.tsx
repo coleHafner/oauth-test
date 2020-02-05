@@ -1,64 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createBrowserHistory } from 'history';
 import { Router, Route, Switch, useHistory } from 'react-router-dom';
-import { getVerificationUri, getVerifier, extractUriParams, getAuthorizationUri } from '../utils';
-import axios from 'axios'
 
-const AUTH_VERIFIER = 'auth-verifier';
-const AUTH_STATE = 'auth-state';
-const AUTH_CHALLENGE = 'auth-challenge';
-const AUTH_CODE = 'auth-code';
-const AUTH_REFRESH_TOKEN = 'auth-refresh-token';
-const AUTH_TOKEN = 'auth-refresh-token';
-const AUTH_EXPIRES = 'auth-expires-utc';
-const AUTH_ID_TOKEN = 'auth-id-token';
+import { 
+  getVerificationUri, 
+  getVerifier, 
+  extractUriParams, 
+  getAuthorizationUri, 
+  getOauthToken,
+} from '../utils';
 
-const local = (): any => {
-  const STORAGE_KEY = 'oauth-test';
-
-  const getSession = (): {[key: string]: string} => 
-    JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
-
-  const setSession = (session: {[key: string]: string} = {}): void => 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-
-  const session = getSession();
-
-  return {
-    clear: () => setSession(),
-    get: (key: string): string|undefined => session[key],
-    set: (key: string, val: string): any => {
-      session[key] = val;
-      setSession(session);
-      return session;
-    }
-  }
-}
+import {
+  local,
+  AUTH_CHALLENGE,
+  AUTH_CODE,
+  AUTH_EXPIRES,
+  AUTH_ID_TOKEN,
+  AUTH_REFRESH_TOKEN,
+  AUTH_STATE,
+  AUTH_TOKEN,
+  AUTH_VERIFIER,
+} from '../local-storage';
 
 const ls = local();
-
-const startOauth = (): string => {
-  const clientId = process.env.CLIENT_ID;
-
-  if (!clientId) {
-    throw new Error('Client ID required! Set it in your .env file...');
-  }
-
-  const { code_verifier, code_challenge } = getVerifier();
-  const state = `${Math.random() * 1117878}`;
-
-  // @TODO store verifier in localStorage
-  ls.set(AUTH_VERIFIER, code_verifier);
-  ls.set(AUTH_CHALLENGE, code_challenge);
-  ls.set(AUTH_STATE, state);
-
-  return getVerificationUri(
-    clientId,
-    'https://localhost/auth',
-    code_challenge,
-    state,
-  );
-};
 
 const isLoggedIn = (): boolean => !!(
   ls.get(AUTH_CODE) &&
@@ -66,10 +30,53 @@ const isLoggedIn = (): boolean => !!(
   ls.get(AUTH_ID_TOKEN)
 );
 
-const Login = () => 
-  <a href={startOauth()}>
-    Login with Google
-  </a>
+const Login = () => {
+  const [uri, setUri] = useState('');
+
+  useEffect(() => {
+    const { code_verifier, code_challenge } = getVerifier();
+    const state = `${Math.random() * 1117878}`;
+
+    // @TODO store verifier in localStorage
+    ls.set(AUTH_VERIFIER, code_verifier);
+    ls.set(AUTH_CHALLENGE, code_challenge);
+    ls.set(AUTH_STATE, state);
+
+    setUri(
+      getVerificationUri(
+        process.env.CLIENT_ID || '',
+        'https://localhost/auth',
+        code_challenge,
+        state,
+      )
+    );
+  }, []);
+
+  return (
+    <a href={uri} style={{
+      display: 'block',
+      textDecoration: 'none',
+      padding: '50px',
+      border: '1px solid #ccc',
+      borderRadius: '7px',
+      width: '200px',
+      textAlign: 'center',
+      fontSize: '20px',
+      fontFamily: 'arial',
+      fontWeight: 'bold',
+      position: 'absolute',
+      right: '50%',
+      top: '50%',
+      marginRight: '-150px',
+      marginTop: '-100px',
+      backgroundColor: 'mediumseagreen',
+      color: 'white',
+      boxShadow: '0 0 20px rgba(1, 1, 1, .33)',
+    }}>
+      Login with Google
+    </a>
+  );
+}
 
 const Home = function() {
   const history = useHistory();
@@ -91,69 +98,55 @@ const Home = function() {
 }
 
 const Auth = () => {
-  const clientId = process.env.CLIENT_ID;
-  const clientSecret = process.env.CLIENT_SECRET;
   const history = useHistory();
-
-  if (!clientId || !clientSecret) {
-    throw new Error('ClientId or clientSecret not found. Cannot continue.')
-  }
-
-  const expectedState = ls.get(AUTH_STATE);
-  const {code, state} = extractUriParams(window.location.href);
-
-  if (state !== expectedState) {
-    throw new Error(`State "${state}" !== "${expectedState}". Cannot continue.`);
-  }
-  console.log('clientID', clientId);
-  console.log('clientSecret', clientSecret);
-
   const [error, setError] = useState('');
   const [didSend, setDidSend] = useState(false);
-  ls.set(AUTH_CODE, decodeURIComponent(code));
-
-  if (!didSend) {
-    setDidSend(true);
+  
+  // @ts-ignore
+  useEffect(async () => {
+    const expectedState = ls.get(AUTH_STATE);
+    const {code, state} = extractUriParams(window.location.href);
+    
+    if (state !== expectedState) {
+      throw new Error(`State "${state}" !== "${expectedState}". Cannot continue.`);
+    }
+    
+    ls.set(AUTH_CODE, decodeURIComponent(code));
 
     const {uri, payload } = getAuthorizationUri(
       ls.get(AUTH_CODE),
       ls.get(AUTH_VERIFIER),
-      clientId,
-      clientSecret,
+      process.env.CLIENT_ID || '',
+      process.env.CLIENT_SECRET || '',
       'https://localhost/auth',
     );
 
-    // post to get token
-    axios.post(
-      uri,
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }
-    )
-      .then(res => {
-        console.log('RES', res.data);
-        const {
-          access_token, 
-          refresh_token, 
-          expires_in,
-          id_token,
-        } = res.data;
+    try {
+      const { 
+        access_token, 
+        refresh_token, 
+        expires_in, 
+        id_token 
+      } = await getOauthToken(uri, payload);
+        
+      ls.set(AUTH_TOKEN, access_token);
+      ls.set(AUTH_EXPIRES, Date.now() + expires_in);
+      ls.set(AUTH_ID_TOKEN, id_token);
+      ls.set(AUTH_REFRESH_TOKEN, refresh_token);
+      setDidSend(true);
 
-        ls.set(AUTH_TOKEN, access_token);
-        ls.set(AUTH_EXPIRES, Date.now() + expires_in);
-        ls.set(AUTH_ID_TOKEN, id_token);
-        ls.set(AUTH_REFRESH_TOKEN, refresh_token);
-        history.push('/');
-        history.go(0);
-      })
-      .catch(err => {
-        console.log(err);
-        setError('Error logging in!');
-      });
-  }
+    } catch (err) {
+      console.log(`ERROR: ${err}`)
+      setError('Error signing in!');
+    }
+  }, []);
+
+  // history cannot be used inside async func
+  useEffect(() => {
+    if (!didSend) return;
+    history.push('/');
+    history.go(0);
+  }, [didSend])
 
   return !error
     ? <div>loading...</div>

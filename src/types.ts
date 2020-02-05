@@ -4,3 +4,10 @@ export type VerifierPayload = {
 };
 
 export type UriParams = {[key: string]: string};
+
+export type TokenPayload = {
+  access_token: string,
+  refresh_token: string,
+  expires_in: string,
+  id_token: string
+}

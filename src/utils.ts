@@ -1,4 +1,6 @@
-import { VerifierPayload, UriParams } from './types';
+import { VerifierPayload, UriParams, TokenPayload } from './types';
+import axios from 'axios';
+
 const pkceChallenge = require('pkce-challenge');
 const { verifyChallenge } = require('pkce-challenge');
 
@@ -36,15 +38,6 @@ export const extractUriParams = (uri: string) => {
   return params;
 };
 
-export const buildUri = (base: string, params: UriParams): string =>
-  `${base}?${Object.keys(params).map(key => key + '=' + encodeURI(params[key])).join('&')}`;
-
-export const doVerifyChallenge = (verifier: string, expectedChallenge: string): boolean => 
-  verifyChallenge(verifier, expectedChallenge);
-
-export const getVerifier = (): VerifierPayload => 
-  pkceChallenge();
-
 export const getAuthorizationUri = (
   authCode: string,
   codeVerifier: string,
@@ -70,4 +63,32 @@ export const getAuthorizationUri = (
     uri: 'https://oauth2.googleapis.com/token', 
     payload 
   };
+}
 
+export const getOauthToken = (uri: string, payload: string): Promise<TokenPayload> =>
+  new Promise((resolve, reject) =>
+    axios.post(
+      uri,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    )
+      .then(res => {
+        resolve(res.data);
+      })
+      .catch(err => {
+        reject(err);
+      })
+  )
+
+export const buildUri = (base: string, params: UriParams): string =>
+  `${base}?${Object.keys(params).map(key => key + '=' + encodeURI(params[key])).join('&')}`;
+
+export const doVerifyChallenge = (verifier: string, expectedChallenge: string): boolean => 
+  verifyChallenge(verifier, expectedChallenge);
+
+export const getVerifier = (): VerifierPayload => 
+  pkceChallenge();
