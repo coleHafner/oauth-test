@@ -4,7 +4,7 @@ export const AUTH_STATE = 'auth-state';
 export const AUTH_CHALLENGE = 'auth-challenge';
 export const AUTH_CODE = 'auth-code';
 export const AUTH_REFRESH_TOKEN = 'auth-refresh-token';
-export const AUTH_TOKEN = 'auth-refresh-token';
+export const AUTH_TOKEN = 'auth-token';
 export const AUTH_EXPIRES = 'auth-expires-utc';
 export const AUTH_ID_TOKEN = 'auth-id-token';
 
