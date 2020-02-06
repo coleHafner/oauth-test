@@ -9,5 +9,11 @@ export type TokenPayload = {
   access_token: string,
   refresh_token: string,
   expires_in: string,
-  id_token: string
+  id_token?: string
+}
+
+export type ProfilePayload = {
+  given_name: string,
+  picture: string,
+  email: string,
 }
