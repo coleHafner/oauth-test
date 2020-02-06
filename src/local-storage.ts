@@ -11,32 +11,18 @@ export const PROFILE_NAME = 'profile-name';
 export const PROFILE_PIC = 'profile-picture';
 export const PROFILE_EMAIL = 'profile-email';
 
-export const local = (): any => {
-  const STORAGE_KEY = 'oauth-test';
+const STORAGE_KEY = 'oauth-test';
 
-  const getSession = (): {[key: string]: string} => 
-    JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
+const getSession = (): {[key: string]: string} => 
+  JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
 
-  const setSession = (session: {[key: string]: string}): void => 
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+const setSession = (session: {[key: string]: string}): void => 
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 
-  let session = getSession();
-
-  return {
-    clear: () => setSession({}),
-    get: (key: string): string|undefined => session[key],
-    set: (key: string, val: string): any => {
-      session[key] = val;
-      setSession(session);
-      return session;
-    },
-    setAll: (toMerge: any): any => {
-      session = {
-        ...session,
-        ...toMerge,
-      };
-      setSession(session);
-      return session;
-    }
-  }
+export const local = {
+  getAll: () => getSession(),
+  clear: () => window.localStorage.clear(),
+  get: (key: string): string|undefined => getSession()[key],
+  setAll: (toMerge: any): void => setSession({...getSession(), ...toMerge}),
+  set: (key: string, val: string): void => setSession({...getSession(), ...{[key]: val}}),
 }

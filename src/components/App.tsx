@@ -1,25 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { LoggedInRoutes, NotLoggedInRoutes } from './Routes';
-
-import {
-  local,
-  AUTH_EXPIRES,
-  AUTH_TOKEN,
-} from '../local-storage';
+import { AuthContext } from '../AuthContext';
+import { local as ls, AUTH_TOKEN, AUTH_EXPIRES } from '../local-storage';
 
 export const App = () => {
-  const ls = local();
-  const [expires, setExpires] = useState(ls.get(AUTH_EXPIRES));
-  const [authToken, setAuthToken] = useState(ls.get(AUTH_TOKEN));
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!(
+    ls.get(AUTH_TOKEN) &&
+    ls.get(AUTH_EXPIRES)
+  ));
 
-  useEffect(() => {
-    setIsLoggedIn(expires && authToken);
-  }, [authToken, expires]);
+  const login = (cb: () => void) => {
+    setIsLoggedIn(true);
+    cb();
+  }
+
+  const logout = () => setIsLoggedIn(false);
 
   return (
-    isLoggedIn
-      ? <LoggedInRoutes />
-      : <NotLoggedInRoutes />
+    <AuthContext.Provider value={{ loggedIn: false, logout, login }}>
+      {isLoggedIn
+        ? <LoggedInRoutes />
+        : <NotLoggedInRoutes />
+      }
+    </AuthContext.Provider>
   );
 };

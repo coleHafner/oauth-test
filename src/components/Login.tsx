@@ -2,13 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { getVerifier, getVerificationUri } from '../utils';
 
 import {
-  local,
+  local as ls,
   AUTH_CHALLENGE,
   AUTH_STATE,
   AUTH_VERIFIER,
 } from '../local-storage';
-
-const ls = local();
 
 export const Login = ({isLoggedIn}: {isLoggedIn: boolean}) => {
   if (isLoggedIn) {
