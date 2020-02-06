@@ -1,5 +1,11 @@
-import { VerifierPayload, UriParams, TokenPayload } from './types';
 import axios from 'axios';
+
+import { 
+  VerifierPayload,
+  UriParams,
+  TokenPayload,
+  ProfilePayload 
+} from './types';
 
 const pkceChallenge = require('pkce-challenge');
 const { verifyChallenge } = require('pkce-challenge');

@@ -17,13 +17,13 @@ export const local = (): any => {
   const getSession = (): {[key: string]: string} => 
     JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "{}");
 
-  const setSession = (session: {[key: string]: string} = {}): void => 
+  const setSession = (session: {[key: string]: string}): void => 
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 
   let session = getSession();
 
   return {
-    clear: () => setSession(),
+    clear: () => setSession({}),
     get: (key: string): string|undefined => session[key],
     set: (key: string, val: string): any => {
       session[key] = val;
