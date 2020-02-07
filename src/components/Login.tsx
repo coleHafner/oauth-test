@@ -8,11 +8,7 @@ import {
   AUTH_VERIFIER,
 } from '../local-storage';
 
-export const Login = ({isLoggedIn}: {isLoggedIn: boolean}) => {
-  if (isLoggedIn) {
-    return <div>Redirecting...</div>;
-  }
-
+export const Login = () => {
   const [uri, setUri] = useState('');
 
   useEffect(() => {

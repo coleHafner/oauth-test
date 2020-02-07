@@ -24,7 +24,7 @@ export const Auth = () => {
   const history = useHistory();
   const [error, setError] = useState('');
 
-  const { login } = useContext(AuthContext);
+  const { actions: { login }} = useContext(AuthContext);
   
   useEffect(() => {
     (async () => {
@@ -38,8 +38,8 @@ export const Auth = () => {
       ls.set(AUTH_CODE, decodeURIComponent(code));
 
       const {uri, payload } = getAuthorizationUri(
-        ls.get(AUTH_CODE),
-        ls.get(AUTH_VERIFIER),
+        ls.get(AUTH_CODE) || '',
+        ls.get(AUTH_VERIFIER) || '',
         process.env.CLIENT_ID || '',
         process.env.CLIENT_SECRET || '',
         'https://localhost/auth',
@@ -65,7 +65,7 @@ export const Auth = () => {
         });
 
         login(() => {
-          setTimeout(() => history.push('/'), 5000);
+          setTimeout(() => history.push('/home'), 500);
         });
       } catch (err) {
         console.log(`ERROR: ${err}`)

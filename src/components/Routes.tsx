@@ -1,10 +1,11 @@
-import { Router, Route, Switch } from 'react-router-dom';
+import { Router, Route, Switch, Redirect } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
-import React, { useEffect } from 'react';
+import React, { useEffect, useContext } from 'react';
 
 import { Login } from './Login';
 import { Home } from './Home';
 import { Auth } from './Auth';
+import { AuthContext } from '../AuthContext';
 
 import {
   getOrRefreshOauthToken,
@@ -18,8 +19,27 @@ import {
   AUTH_TOKEN,
 } from '../local-storage';
 
-export const LoggedInRoutes = () => {
+const AuthedRoute = ({children, ...rest}) => {
+  const { loggedIn } = useContext(AuthContext);
+  return (
+    <Route
+      {...rest}
+      render={({location}) =>
+        loggedIn
+          ? (children)
+          : (<Redirect to={{ pathname: '/', state: {from: location}}} />)
+      }>
+    </Route>
+  );
+};
+
+export const Routes = () => {
+  const { loggedIn } = useContext(AuthContext);
+
   useEffect(() => {
+    if (!loggedIn) {
+      return;
+    }
     let intervalId: any;
 
     (async () => {
@@ -57,19 +77,11 @@ export const LoggedInRoutes = () => {
   return (
     <Router history={createBrowserHistory()}>
       <Switch>
-        <Route path="/" component={Home}></Route>
-        <Route path="*">
-          <div>404 error!</div>
-        </Route>
+        <Route exact path="/auth" component={Auth}></Route>
+        <AuthedRoute exact path="/home"><Home /></AuthedRoute>
+        <Route path="/"><Login /></Route>
+        <Route path="*"><div>404 error!</div></Route>
       </Switch>
     </Router>
   );
 }
-
-export const NotLoggedInRoutes = () => 
-  <Router history={createBrowserHistory()}>
-    <Switch>
-      <Route exact path="/"><Login isLoggedIn={false} /></Route>
-      <Route path="/auth" component={Auth}></Route>
-    </Switch>
-  </Router>
