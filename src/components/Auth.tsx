@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useHistory } from 'react-router-dom';
 import { AuthContext } from '../AuthContext';
+import { LoginButton } from './Login';
 
 import {
   extractUriParams,
@@ -76,5 +77,5 @@ export const Auth = () => {
 
   return error
     ? <h3 style={{color: 'red'}}>{error}</h3>
-    : <div>loading...</div>;
+    : <LoginButton uri={''} loading={true} />;
 }

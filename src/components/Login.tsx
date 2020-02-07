@@ -30,6 +30,21 @@ export const Login = () => {
     );
   }, []);
 
+  return <LoginButton uri={uri} loading={false} />
+}
+
+export const LoginButton = ({uri, loading}: {uri: string, loading: boolean}) => {
+  const [loadingText, setLoadingText] = useState('.');
+
+  useEffect(() => {
+    if (!loading) return;
+
+    const intervalId = setInterval(() => {
+      setLoadingText(loadingText.length === 3 ? '.' : `${loadingText}.`);
+    }, 300);
+
+    return () => clearInterval(intervalId);
+  });
   return (
     <a href={uri} style={{
       display: 'block',
@@ -51,7 +66,10 @@ export const Login = () => {
       color: 'white',
       boxShadow: '0 0 20px rgba(1, 1, 1, .33)',
     }}>
-      Login with Google
+      {loading
+        ?  <span>{loadingText}</span>
+        : <span>Login with Google</span>
+      }
     </a>
   );
 }
