@@ -9,6 +9,7 @@ cp .env.sample .env
 # copy your client id and client secret into the .env file
 
 # start the server
+npm ci
 npm run dev
 ```
 
