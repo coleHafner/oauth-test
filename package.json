@@ -13,7 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "history": "^4.10.1",
     "pkce-challenge": "^2.1.0",
     "react": "^16.12.0",
